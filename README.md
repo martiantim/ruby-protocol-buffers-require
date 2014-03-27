@@ -1,5 +1,7 @@
 # ProtocolBuffersRequire
 
+[![Build Status](https://travis-ci.org/peter-edge/ruby-protocol-buffers-require.png?branch=master)](https://travis-ci.org/peter-edge/ruby-protocol-buffers-require)
+
 Compile and require protocol buffers at runtime with the ruby-protocol-buffers library.
 
 https://github.com/codekitchen/ruby-protocol-buffers
