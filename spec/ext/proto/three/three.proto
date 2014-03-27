@@ -1,0 +1,62 @@
+package centzy.three;
+
+import "one.proto";
+import "two.proto";
+
+option java_package = "com.centzy.three";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+option optimize_for = SPEED;
+option java_generic_services = true;
+
+message Foo {
+  enum Bar {
+    ONE = 1;
+    TWO = 2;
+    THREE = 3;
+  }
+
+  message Baz {
+    optional string string_1 = 1;
+    optional int64 int64_2 = 2;
+  }
+
+  optional string string_1 = 1;
+  optional int64 int64_2 = 2;
+  optional Bar bar_3 = 3;
+  optional Baz baz_4 = 4;
+  optional bytes bytes_5 = 5;
+
+  repeated string repeated_string_6 = 6;
+  repeated int64 repeated_int64_7 = 7;
+  repeated bytes repeated_bytes_8 = 8;
+
+  optional centzy.one.Foo centzy_one_foo_9 = 9;
+  optional centzy.two.Foo centzy_two_foo_10 = 10;
+}
+
+message RequestOne {
+  optional Foo request_one_foo = 1;
+}
+
+message ResponseOne {
+  optional Foo response_one_foo = 1;
+}
+
+message RequestTwo {
+  optional Foo request_two_foo = 1;
+}
+
+message ResponseTwo {
+  optional Foo response_two_foo = 1;
+}
+
+service ServiceOne {
+  rpc OneOneOne(RequestOne) returns (ResponseOne);
+  rpc OneTwoTwo(RequestTwo) returns (ResponseTwo);
+}
+
+service ServiceTwo {
+  rpc TwoOneOne(RequestOne) returns (ResponseOne);
+  rpc TwoTwoTwo(RequestTwo) returns (ResponseTwo);
+}

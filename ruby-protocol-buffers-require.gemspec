@@ -9,9 +9,9 @@ Gem::Specification.new do |gem|
   gem.version       = ProtocolBuffersRequire::GEM_VERSION
   gem.authors       = ["Peter Edge"]
   gem.email         = ["peter@locality.com"]
-  gem.summary       = %{ProtocolBuffersRequire}
-  gem.description   = %{ProtocolBuffersRequire for Ruby}
-  gem.homepage      = "https://github.com/centzy/ruby-protocol-buffers-require"
+  gem.summary       = %{Compile and require protocol buffers at runtime with the ruby-protocol-buffers library}
+  gem.description   = %{Compile and require protocol buffers at runtime with the ruby-protocol-buffers library}
+  gem.homepage      = "https://github.com/peter-edge/ruby-protocol-buffers-require"
   gem.license       = "MIT"
 
   gem.files         = `git ls-files`.split($/)
