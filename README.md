@@ -8,15 +8,15 @@ https://github.com/codekitchen/ruby-protocol-buffers
 
 Say you have the following layout:
 
-/
-  lib/
-    my_gem.rb
-  ext/
-    proto/
-      one/
-        one.proto
-      two/
-        two.proto
+/  
+  lib/  
+    my_gem.rb  
+  ext/  
+    proto/  
+      one/  
+        one.proto  
+      two/  
+        two.proto  
 
 In my_gem.rb, you can do:
 
