@@ -6,9 +6,18 @@ require 'protocol_buffers'
 require 'protocol_buffers/compiler'
 require 'protocol_buffers/compiler/file_descriptor_to_ruby'
 
+require 'logger'
 require 'tempfile'
 
 module ProtocolBuffersRequire
+
+  @@logger = Logger.new(STDOUT).tap { |logger| logger.level = Logger::INFO }
+  @@logger_enabled = false
+
+  def self.set_logger_enabled(logger_enabled)
+    @@logger_enabled = logger_enabled
+    nil
+  end
 
   def self.require_dirs(*include_dirs)
     include_dirs = include_dirs.map do |include_dir|
@@ -22,6 +31,11 @@ module ProtocolBuffersRequire
 
     protocfile = Tempfile.new("ruby-protoc")
     protocfile.binmode
+    if @@logger_enabled
+      # TODO(pedge): This is the command that is executed, but this is copied from ProtocolBuffers::Compiler.compile
+      # This should not depend on the logic within this method
+      @@logger.info("protoc #{include_dirs.map { |include_dir| "-I#{include_dir}" }.join(' ')} -o#{protocfile.path} #{filenames.join(' ')}")
+    end
     ProtocolBuffers::Compiler.compile(protocfile.path, filenames, :include_dirs => include_dirs)
     descriptor_set = Google::Protobuf::FileDescriptorSet.parse(protocfile)
     protocfile.close(true)
@@ -33,6 +47,9 @@ module ProtocolBuffersRequire
       FileUtils.mkpath(File.dirname(path)) unless File.directory?(File.dirname(path))
       File.open(path, "wb") do |file|
         dumper = FileDescriptorToRuby.new(file_descriptor)
+        if @@logger_enabled
+          @@logger.info("Writing #{file_descriptor.name} to #{path}")
+        end
         dumper.write(file)
       end
       path
