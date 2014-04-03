@@ -6,6 +6,12 @@ option java_generate_equals_and_hash = true;
 option optimize_for = SPEED;
 option java_generic_services = true;
 
+enum Bat {
+  BAT_ONE = 1;
+  BAT_TWO = 2;
+  BAT_THREE = 3;
+}
+
 message Foo {
   enum Bar {
     ONE = 1;

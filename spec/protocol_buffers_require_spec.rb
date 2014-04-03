@@ -9,9 +9,10 @@ describe ProtocolBuffersRequire do
   it "does basic operations" do
     base_path = File.expand_path(File.join(File.dirname(__FILE__), "ext/proto"))
     ProtocolBuffersRequire.require_dirs(
+      base_path,
       File.join(base_path, "one"),
-      File.join(base_path, "two"),
       File.join(base_path, "three"),
+      File.join(base_path, "two"),
       File.join(base_path, "google", "protobuf")
     )
 
@@ -41,5 +42,9 @@ describe ProtocolBuffersRequire do
     Centzy::One::ServiceOne.rpcs.map { |rpc| rpc.name.to_s }.should =~ ["one_one_one", "one_two_two" ]
     Centzy::Two::ServiceOne.rpcs.map { |rpc| rpc.name.to_s }.should =~ ["one_one_one", "one_two_two" ]
     Centzy::Three::ServiceOne.rpcs.map { |rpc| rpc.name.to_s }.should =~ ["one_one_one", "one_two_two" ]
+
+    Centzy::One::Bat::BAT_ONE.should == 1
+    Centzy::Two::Bat::BAT_ONE.should == 1
+    Centzy::Three::Bat::BAT_ONE.should == 1
   end
 end

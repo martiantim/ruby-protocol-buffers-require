@@ -1,9 +1,9 @@
 package centzy.three;
 
-import "one.proto";
-import "two.proto";
+import "one/one.proto";
+import "two/two.proto";
 
-import "descriptor.proto";
+import "google/protobuf/descriptor.proto";
 
 option java_package = "com.centzy.three";
 option java_multiple_files = true;
@@ -13,6 +13,12 @@ option java_generic_services = true;
 
 extend google.protobuf.MessageOptions {
   optional bool some_option = 70001;
+}
+
+enum Bat {
+  BAT_ONE = 1;
+  BAT_TWO = 2;
+  BAT_THREE = 3;
 }
 
 message Foo {
