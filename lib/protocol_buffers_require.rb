@@ -42,21 +42,41 @@ module ProtocolBuffersRequire
 
     ruby_out = Dir.mktmpdir
     paths = descriptor_set.file.map do |file_descriptor|
-      fullpath = filenames[filenames.index{|path| path.include? file_descriptor.name}]
-      path = File.join(ruby_out, File.dirname(fullpath), File.basename(file_descriptor.name, ".proto") + ".pb.rb")
-      FileUtils.mkpath(File.dirname(path)) unless File.directory?(File.dirname(path))
-      File.open(path, "wb") do |file|
-        dumper = FileDescriptorToRuby.new(file_descriptor)
+      if _skip?(file_descriptor)
         if @@logger_enabled
-          @@logger.info("Writing #{file_descriptor.name} to #{path}")
+          @@logger.info("Skipping #{file_descriptor.name}")
         end
-        dumper.write(file)
+        nil
+      else
+        fullpath = filenames[filenames.index{|path| path.include? file_descriptor.name}]
+        path = File.join(ruby_out, File.dirname(fullpath), File.basename(file_descriptor.name, ".proto") + ".pb.rb")
+        FileUtils.mkpath(File.dirname(path)) unless File.directory?(File.dirname(path))
+        File.open(path, "wb") do |file|
+          dumper = FileDescriptorToRuby.new(file_descriptor)
+          if @@logger_enabled
+            @@logger.info("Writing #{file_descriptor.name} to #{path}")
+          end
+          dumper.write(file)
+        end
+        path
       end
-      path
-    end
+    end.compact
 
     paths.each do |path|
       require path
     end
+  end
+
+  # PRIVATE
+
+  def self._skip?(file_descriptor)
+    if file_descriptor.has_options?
+      if file_descriptor.options.has_java_package? && file_descriptor.options.has_java_outer_classname?
+        if file_descriptor.options.java_package == "com.google.protobuf" && file_descriptor.options.java_outer_classname == "DescriptorProtos"
+          return true
+        end
+      end
+    end
+    return false
   end
 end
