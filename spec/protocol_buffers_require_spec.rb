@@ -12,6 +12,7 @@ describe ProtocolBuffersRequire do
       File.join(base_path, "one"),
       File.join(base_path, "two"),
       File.join(base_path, "three"),
+      File.join(base_path, "google", "protobuf")
     )
 
     one_foo = Centzy::One::Foo.new(:string_1 => "one")
