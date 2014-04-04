@@ -11,6 +11,9 @@ describe ProtocolBuffersRequire do
     ProtocolBuffersRequire.require_dirs(
       base_path,
       File.join(base_path, "one"),
+    )
+    ProtocolBuffersRequire.require_dirs(
+      base_path,
       File.join(base_path, "three"),
       File.join(base_path, "two"),
       File.join(base_path, "google", "protobuf")
