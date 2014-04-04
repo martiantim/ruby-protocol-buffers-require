@@ -15,6 +15,8 @@ module ProtocolBuffersRequire
   @@logger = Logger.new(STDOUT).tap { |logger| logger.level = Logger::INFO }
   @@logger_enabled = false
 
+  @@required_filenames = Set.new
+
   def self.set_logger_enabled(logger_enabled)
     @@logger_enabled = logger_enabled
     nil
@@ -28,6 +30,8 @@ module ProtocolBuffersRequire
       Dir.glob(File.join(include_dir, "*.proto"))
     end.flatten.map do |file|
       File.expand_path(file)
+    end.reject do |filename|
+      @@required_filenames.include?(filename)
     end
 
     protocfile = Tempfile.new("ruby-protoc")
@@ -82,6 +86,10 @@ module ProtocolBuffersRequire
         end
       end
       package_to_path = unrequired_package_to_path
+    end
+
+    filenames.each do |filename|
+      @@required_filenames << filename
     end
     nil
   end
