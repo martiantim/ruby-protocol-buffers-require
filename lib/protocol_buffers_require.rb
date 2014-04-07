@@ -9,6 +9,7 @@ require 'protocol_buffers/compiler/file_descriptor_to_ruby'
 require 'logger'
 require 'tempfile'
 require 'set'
+require 'digest'
 
 module ProtocolBuffersRequire
 
@@ -16,7 +17,7 @@ module ProtocolBuffersRequire
   @@logger_enabled = false
 
   @@required_filenames = Set.new
-  @@required_packages = Set.new
+  @@required_file_descriptor_md5s = Set.new
 
   def self.set_logger_enabled(logger_enabled)
     @@logger_enabled = logger_enabled
@@ -37,41 +38,28 @@ module ProtocolBuffersRequire
 
     protocfile = Tempfile.new("ruby-protoc")
     protocfile.binmode
-    if @@logger_enabled
-      # TODO(pedge): This is the command that is executed, but this is copied from ProtocolBuffers::Compiler.compile
-      # This should not depend on the logic within this method
-      @@logger.info("protoc #{include_dirs.map { |include_dir| "-I#{include_dir}" }.join(' ')} -o#{protocfile.path} #{filenames.join(' ')}")
-    end
+    # TODO(pedge): This is the command that is executed, but this is copied from ProtocolBuffers::Compiler.compile
+    # This should not depend on the logic within this method
+    _log("protoc #{include_dirs.map { |include_dir| "-I#{include_dir}" }.join(' ')} -o#{protocfile.path} #{filenames.join(' ')}")
     ProtocolBuffers::Compiler.compile(protocfile.path, filenames, :include_dirs => include_dirs)
     descriptor_set = Google::Protobuf::FileDescriptorSet.parse(protocfile)
     protocfile.close(true)
 
+    file_descriptors = descriptor_set.file.reject do |file_descriptor|
+      _skip_and_log?(file_descriptor)
+    end
+
     ruby_out = Dir.mktmpdir
-    package_to_path = descriptor_set.file.inject(Hash.new) do |hash, file_descriptor|
-      if _skip?(file_descriptor)
-        if @@logger_enabled
-          @@logger.info("Skipping #{file_descriptor.name}")
-        end
-      elsif !file_descriptor.has_package?
-        raise ArgumentError.new("All files must have a package, file #{file_descriptor.name} does not have a package")
-      elsif @@required_packages.include?(file_descriptor.package)
-        if @@logger_enabled
-          @@logger.info("Skipping #{file_descriptor.name}")
-        end
-      else
-        @@required_packages << file_descriptor.package
-        fullpath = filenames[filenames.index{|path| path.include? file_descriptor.name}]
-        path = File.join(ruby_out, File.dirname(fullpath), File.basename(file_descriptor.name, ".proto") + ".pb.rb")
-        FileUtils.mkpath(File.dirname(path)) unless File.directory?(File.dirname(path))
-        File.open(path, "wb") do |file|
-          dumper = FileDescriptorToRuby.new(file_descriptor)
-          if @@logger_enabled
-            @@logger.info("Writing #{file_descriptor.name} with package #{file_descriptor.package} to #{path}")
-          end
-          dumper.write(file)
-        end
-        hash[file_descriptor.package] = path
+    package_to_path = file_descriptors.inject(Hash.new) do |hash, file_descriptor|
+      fullpath = filenames[filenames.index{|path| path.include? file_descriptor.name}]
+      path = File.join(ruby_out, File.dirname(fullpath), File.basename(file_descriptor.name, ".proto") + ".pb.rb")
+      FileUtils.mkpath(File.dirname(path)) unless File.directory?(File.dirname(path))
+      File.open(path, "wb") do |file|
+        dumper = FileDescriptorToRuby.new(file_descriptor)
+        _log("Writing #{file_descriptor.name} with package #{file_descriptor.package} to #{path}")
+        dumper.write(file)
       end
+      hash[file_descriptor.package] = path
       hash
     end
 
@@ -98,7 +86,20 @@ module ProtocolBuffersRequire
 
   # PRIVATE
 
+  def self._skip_and_log?(file_descriptor)
+    skip = _skip?(file_descriptor)
+    _log("Skipping #{file_descriptor.name} with package #{file_descriptor.package}") if skip
+    skip
+  end
+
   def self._skip?(file_descriptor)
+    md5 = Digest::MD5.new.digest(file_descriptor.serialize_to_string)
+    if @@required_file_descriptor_md5s.include?(md5)
+      return true
+    else
+      @@required_file_descriptor_md5s << md5
+    end
+
     # TODO(pedge): A better way to identify already required packages
     if file_descriptor.has_options?
       if file_descriptor.options.has_java_package? && file_descriptor.options.has_java_outer_classname?
@@ -107,7 +108,14 @@ module ProtocolBuffersRequire
         end
       end
     end
+
     return false
+  end
+
+  def self._log(string)
+    if @@logger_enabled
+      @@logger.info(string)
+    end
   end
 
   def self._package_to_base_module_and_module_name(package)
