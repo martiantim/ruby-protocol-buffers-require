@@ -16,6 +16,7 @@ module ProtocolBuffersRequire
   @@logger_enabled = false
 
   @@required_filenames = Set.new
+  @@required_packages = Set.new
 
   def self.set_logger_enabled(logger_enabled)
     @@logger_enabled = logger_enabled
@@ -46,18 +47,17 @@ module ProtocolBuffersRequire
     protocfile.close(true)
 
     ruby_out = Dir.mktmpdir
-    packages = Set.new
     package_to_path = descriptor_set.file.inject(Hash.new) do |hash, file_descriptor|
-      if (!file_descriptor.has_package? || packages.include?(file_descriptor.package))
-        raise ArgumentError.new("All files must have a unique package, non-unique was #{file_descriptor.package}")
-      else
-        packages << file_descriptor.package
-      end
       if _skip?(file_descriptor)
         if @@logger_enabled
           @@logger.info("Skipping #{file_descriptor.name}")
         end
       else
+        if (!file_descriptor.has_package? || @@required_packages.include?(file_descriptor.package))
+          raise ArgumentError.new("All files must have a unique package, non-unique was #{file_descriptor.package}")
+        else
+          @@required_packages << file_descriptor.package
+        end
         fullpath = filenames[filenames.index{|path| path.include? file_descriptor.name}]
         path = File.join(ruby_out, File.dirname(fullpath), File.basename(file_descriptor.name, ".proto") + ".pb.rb")
         FileUtils.mkpath(File.dirname(path)) unless File.directory?(File.dirname(path))
