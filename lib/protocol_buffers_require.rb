@@ -64,7 +64,7 @@ module ProtocolBuffersRequire
         File.open(path, "wb") do |file|
           dumper = FileDescriptorToRuby.new(file_descriptor)
           if @@logger_enabled
-            @@logger.info("Writing #{file_descriptor.name} to #{path}")
+            @@logger.info("Writing #{file_descriptor.name} with package #{file_descriptor.package} to #{path}")
           end
           dumper.write(file)
         end
