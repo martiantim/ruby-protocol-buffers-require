@@ -52,12 +52,14 @@ module ProtocolBuffersRequire
         if @@logger_enabled
           @@logger.info("Skipping #{file_descriptor.name}")
         end
-      else
-        if (!file_descriptor.has_package? || @@required_packages.include?(file_descriptor.package))
-          raise ArgumentError.new("All files must have a unique package, non-unique was #{file_descriptor.package}")
-        else
-          @@required_packages << file_descriptor.package
+      elsif !file_descriptor.has_package?
+        raise ArgumentError.new("All files must have a package, file #{file_descriptor.name} does not have a package")
+      elsif @@required_packages.include?(file_descriptor.package)
+        if @@logger_enabled
+          @@logger.info("Skipping #{file_descriptor.name}")
         end
+      else
+        @@required_packages << file_descriptor.package
         fullpath = filenames[filenames.index{|path| path.include? file_descriptor.name}]
         path = File.join(ruby_out, File.dirname(fullpath), File.basename(file_descriptor.name, ".proto") + ".pb.rb")
         FileUtils.mkpath(File.dirname(path)) unless File.directory?(File.dirname(path))
