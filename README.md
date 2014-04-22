@@ -30,6 +30,8 @@ And all protocol buffer definitions will be imported as if you compiled these se
 using ruby-protoc. Imports are allowed between files in different directories (all directories
 are included using the equivalent of '-I').
 
+Note the implementation is very hacky, so use of this library is discouraged. I know that sounds ridiculous.
+
 Written for Locality  
 http://www.locality.com
 
