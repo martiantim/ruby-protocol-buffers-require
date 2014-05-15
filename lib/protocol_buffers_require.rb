@@ -49,7 +49,15 @@ module ProtocolBuffersRequire
       _skip_and_log?(file_descriptor)
     end
 
-    ruby_out = Dir.mktmpdir
+    #Use same directory if files haven't changed
+    #TODO: Ideally don't run protoc or write the files if dir exists but that's kinda complicated based on how require works below
+    filename_hash = Zlib.crc32(filenames.join(","))
+    most_recent = filenames.map do |f|
+      File.mtime(f)
+    end.max
+    ruby_out = "#{Dir.tmpdir}/proto-#{filename_hash}-#{most_recent.to_i}"
+    Dir.mkdir(ruby_out) if !Dir.exists?(ruby_out)
+
     package_to_path = file_descriptors.inject(Hash.new) do |hash, file_descriptor|
       fullpath = filenames[filenames.index{|path| path.include? file_descriptor.name}]
       path = File.join(ruby_out, File.dirname(fullpath), File.basename(file_descriptor.name, ".proto") + ".pb.rb")
